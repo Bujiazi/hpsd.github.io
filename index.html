@@ -1,0 +1,224 @@
+
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+  <title>MV-GRPO</title>
+  <link rel="stylesheet" href="./FreeScale_files/css/bootstrap.min.css">
+  <link rel="stylesheet" href="./FreeScale_files/css/dics.min.css">
+  <link rel="stylesheet" href="./FreeScale_files/css/bulma.min.css">
+  <link rel="stylesheet" href="./FreeScale_files/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./FreeScale_files/css/index.css">
+  <link rel="stylesheet" href="./FreeScale_files/css/style.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="./FreeScale_files/js/bulma-carousel.min.js"></script>
+  <script src="./FreeScale_files/js/index.js"></script>
+  <script src="./FreeScale_files/js/dics.min.js"></script>
+  <script>
+      document.addEventListener('DOMContentLoaded', domReady);
+      function domReady() {
+          for (const e of document.querySelectorAll(".b-dics")) {
+              new Dics({
+                  container: e,
+                  textPosition: "top"
+              });
+          }
+      }
+  </script>
+  </head>
+
+  <script>
+  window.MathJax = {
+    tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] }
+  };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+
+  <style>
+    #authors { font-size: 19px; }   /* 改成你想要的大小，如 13px/12px */
+  </style>
+  
+  <div class="content">
+    <h1><strong><font color="#9980FA">🎨 From Sparse to Dense</font>: Multi-View GRPO for Flow Models </p> via Augmented Condition Space</strong></h1>
+    <p style="text-align: center; font-weight: bold; font-size: 1.2em"><b style="color:#f41c1c"> ECCV</b> 2026</p>
+    <!-- <p style="text-align: center; font-weight: bold; font-size: 1.2em">2025</p> -->
+    <p id="authors"><a href="https://scholar.google.com/citations?user=a8h9Di4AAAAJ"><b>Jiazi Bu<sup>1,2,6*</sup></b></a> 
+                    <a href="https://github.com/LPengYang/"><b>Pengyang Ling<sup>3*</sup></b></a> 
+                    <a href="https://github.com/YujieOuO"><b>Yujie Zhou<sup>1,6*</sup></b></a> 
+                    <a href="https://codegoat24.github.io/"><b>Yibin Wang<sup>4,9</sup></b></a>
+                    <a href="https://yuhangzang.github.io/"><b>Yuhang Zang<sup>6</sup></b></a></p> 
+    <p id="authors"><a href="https://wtybest.github.io/"><b>Tianyi Wei<sup>2</sup></b></a>
+                    <a href="https://xiaohangzhan.github.io/"><b>Xiaohang Zhan<sup>7</sup></b></a>
+                    <a href="https://myownskyw7.github.io/"><b>Jiaqi Wang<sup>9</sup></b></a>
+                    <a href="https://wutong16.github.io/"><b>Tong Wu<sup>8†</sup></b></a>
+                    <a href="https://xingangpan.github.io/"><b>Xingang Pan<sup>2†</sup></b></a> 
+                    <a href="http://dahua.site/"><b>Dahua Lin<sup>5,6,10</sup></b></a><br>
+    <br>
+    <span style="font-size: 14.9px"><b><sup>1</sup> Shanghai Jiao Tong University</b> &nbsp;&nbsp; <b><sup>2</sup> S-Lab, Nanyang Technological University</b>   
+    </span>
+    <br>
+    <span style="font-size: 14.9px"><b><sup>3</sup> University of Science and Technology of China</b> &nbsp;&nbsp; <b><sup>4</sup> Fudan University</b> &nbsp;&nbsp; <b><sup>5</sup> The Chinese University of Hong Kong </b>
+    </span>
+    <br>
+    <span style="font-size: 14.9px"><b><sup>6</sup> Shanghai AI Laboratory</b> &nbsp;&nbsp; <b><sup>7</sup> Adobe Research</b> &nbsp;&nbsp; <b><sup>8</sup> Stanford University</b> &nbsp;&nbsp; <b><sup>9</sup> Shanghai Innovation Institute</b> &nbsp;&nbsp; <b><sup>10</sup> CPII under InnoHK</b>
+    </span>
+    <br>
+    <span style="font-size: 14.9px"><b>(<sup>*</sup> Equal Contribution &nbsp; <sup>†</sup> Corresponding Author)</b>
+    </span></p>
+    <font size="+2">
+      <p style="text-align: center;">
+        <a href="https://arxiv.org/abs/2603.12648" target="_blank"><b>[Research Paper]</b></a> &nbsp;&nbsp;&nbsp;&nbsp;
+        <!-- <a href="https://bujiazi.github.io/mvgrpo.github.io/" target="_blank"><b>[Code (Coming Soon)]</b></a> -->
+      </p>
+    </font>
+    <br>
+    <img width="960" src="./FreeScale_files/figs/fig_teaser.png">
+  </div>
+  
+  <!-- <div class="container" id="main">
+    <div class="content">
+      <h2 style="text-align:center;"><b>Demo Video for DiCache</b></h2>
+      <video muted loop playsinline controls dth="1024px">
+        <source src="./FreeScale_files/vids/dicache_demo_video.mp4" type="video/mp4">
+      </video>
+    </div>
+  </div> -->
+
+  <div class="content">
+    <h2 style="text-align:center;"><b>Abstract</b></h2>
+    <p>Group Relative Policy Optimization (GRPO) has emerged as a powerful framework for preference alignment in text-to-image (T2I) flow models. However, we observe that the standard paradigm where evaluating a group of generated samples against a single condition suffers from insufficient exploration of inter-sample relationships, constraining both alignment efficacy and performance ceilings. To address this sparse single-view evaluation scheme, we propose Multi-View GRPO (<b>MV-GRPO</b>), a novel approach that enhances relationship exploration by augmenting the condition space to create a dense multi-view reward mapping. Specifically, for a group of samples generated from one prompt, MV-GRPO leverages a flexible Condition Enhancer to generate semantically adjacent yet diverse captions. These captions enable multi-view advantage re-estimation, capturing diverse semantic attributes and providing richer optimization signals. By deriving the probability distribution of the original samples conditioned on these new captions, we can incorporate them into the training process without costly sample regeneration. Extensive experiments demonstrate that MV-GRPO achieves superior alignment performance over state-of-the-art methods.</p>
+  </div>
+
+  <div class="content">
+    <h2><b>Observation and Motivation</b></h2>
+    <p>
+    Existing flow-based GRPO methods typically operate under a ''Single-View'' paradigm: they evaluate the generated group solely against the single initial condition. This reward evaluation protocol can be reinterpreted as <b>a sparse, one-to-many mapping from the condition space \( \mathcal{C} \) to the data space \( \mathcal{X} \),</b> as shown in the Figure.1 (a). Fundamentally, this paradigm models intra-group relationships by ranking samples based on their alignment with a singular condition, ignoring the multifaceted nature of visual semantics. For instance, as illustrated in Figure.2, given a SDE sample describing a cat and a dog within a teacup, it may rank poorly under one condition (''A cat and a dog in a teacup.'') but highly under another similar condition specifying visual attributes like lighting, motion or composition. Consequently, relying solely on the ranking derived from a single prompt is insufficient to gauge the nuanced relationships among samples, resulting in an inherently sparse reward mapping. Consequently, relying solely on the ranking derived from a single prompt is insufficient to gauge the nuanced relationships among samples, resulting in an inherently sparse reward mapping.
+    In contrast, <b>by incorporating the diverse rankings induced by novel prompts, we can effectively densify the condition-data reward signal</b>, as depicted in Figure.1 (b). This strategy serves dual purposes: (i) enabling a more comprehensive exploration of intra-group relationships from multiple perspectives, and (ii) establishing intrinsic contrasts by identifying ranking shifts across different conditions, thereby facilitating preference-aligned generation under various conditions.</p>
+    <div style="text-align: center;">
+    <img width="960" src="./FreeScale_files/figs/fig_motivation.png">
+    <h4 class="subtitle has-text-centered" style="margin-top: 20px;">
+      Figure 1: Reward Evaluation in GRPO Training.
+    </h4>
+  </div>
+  <div style="text-align: center;">
+    <img width="960" src="./FreeScale_files/figs/fig_observation.png">
+    <h4 class="subtitle has-text-centered" style="margin-top: 20px;">
+      Figure 2: Reward Ranking Varies with Conditions.
+    </h4>
+  </div>
+  </div>
+
+  <div class="content">
+    <h2><b>Methodology</b></h2>
+    <p>Given a group of SDE samples, MV-GRPO first leverages a flexible Condition Enhancer module (a pretrained VLM or LLM) to generate diverse augmented conditions. These augmented descriptors, along with the original condition, form a multi-view condition cluster for dense condition-data reward signals, facilitating comprehensive advantage estimation. We justify optimizing the policy conditioned on an augmented view using trajectories generated under the original condition in the Theoretical Perspective part of our paper.</p>
+    <div style="text-align: center;">
+    <img width="960" src="./FreeScale_files/figs/fig_framework.png">
+    <h4 class="subtitle has-text-centered" style="margin-top: 20px;">
+      Figure 3: Overview of MV-GRPO.
+    </h4>
+    </div>
+  </div>
+  
+  <div class="content">
+    <h2><b>Qualitative Comparison</b></h2>
+    <p>Qualitative comparisons with existing flow-based GRPO methods. MV-GRPO consistently outperforms the baselines in semantic alignment, visual fidelity, and structural coherence across diverse scenarios and reward models.</p>
+    <div style="text-align: center;">
+    <img width="960" src="./FreeScale_files/figs/fig_img_compare_hpsv3.png">
+    <h4 class="subtitle has-text-centered" style="margin-top: 20px;">
+      Figure 4: Qualitative Comparisons with Baselines on HPS-v3.
+    </h4>
+    </div>
+    <br>
+    <div style="text-align: center;">
+      <img width="960" src="./FreeScale_files/figs/fig_img_compare_urv2.png">
+      <h4 class="subtitle has-text-centered" style="margin-top: 20px;">
+        Figure 5: Qualitative Comparisons with Baselines on UnifiedReward-v2.
+      </h4>
+      </div>
+  </div>
+  
+  <div class="content">
+    <h2><b>Quantitative Evaluation</b></h2>
+    <p>Quantitative assessments of the proposed MV-GRPO and other baselines. MV-GRPO demonstrates consistent superiority under both single reward (HPS-v3 or UnifiedReward-v2) and multi-reward (HPS-v3 + CLIP) settings. The reward curves during training further validate that our MV-GRPO outperforms baselines in convergence speed and performance ceiling.</p>
+    <div style="text-align: center;">
+      <img width="960" src="./FreeScale_files/figs/fig_curve.png">
+      <h4 class="subtitle has-text-centered" style="margin-top: 20px;">
+        Figure 6: Reward Curves during Training.
+      </h4>
+      </div>
+      <br>
+    <div style="text-align: center;">
+    <img width="960" src="./FreeScale_files/figs/fig_quantitative.png">
+    </div>
+  </div>
+
+  <div class="content">
+    <h2><b>Gallery of MV-GRPO</b></h2>
+    <p>We present additional visual results of the proposed MV-GRPO. More samples can be found in our supplementary material.</p>
+    <div style="text-align: center;">
+    <img width="960" src="./FreeScale_files/figs/fig_gallery_1.png">
+    <h4 class="subtitle has-text-centered" style="margin-top: 20px;">
+      Figure 7: Additional Visual Samples of MV-GRPO (1/3).
+    </h4>
+    </div>
+    <br>
+    <div style="text-align: center;">
+    <img width="960" src="./FreeScale_files/figs/fig_gallery_2.png">
+    <h4 class="subtitle has-text-centered" style="margin-top: 20px;">
+      Figure 8: Additional Visual Samples of MV-GRPO (2/3).
+    </h4>
+    </div>
+    <br>
+    <div style="text-align: center;">
+    <img width="960" src="./FreeScale_files/figs/fig_gallery_3.png">
+    <h4 class="subtitle has-text-centered" style="margin-top: 20px;">
+      Figure 9: Additional Visual Samples of MV-GRPO (3/3).
+    </h4>
+    </div>
+  </div>
+  
+  
+  <div class="content">
+  <h2>BibTex</h2>
+  <p>
+      If you find this work helpful, please cite the following paper:
+  </p>
+  <div class="row">
+  <pre>
+    @article{bu2026sparse,
+      title={From Sparse to Dense: Multi-View GRPO for Flow Models via Augmented Condition Space},
+      author={Bu, Jiazi and Ling, Pengyang and Zhou, Yujie and Wang, Yibin and Zang, Yuhang and Wei, Tianyi and Zhan, Xiaohang and Wang, Jiaqi and Wu, Tong and Pan, Xingang and others},
+      journal={arXiv preprint arXiv:2603.12648},
+      year={2026}
+    }
+  </pre>
+  </div>
+  </div>
+
+  <div class="content">
+    <p>Project page template is borrowed from <a href="http://haonanqiu.com/projects/FreeScale.html">FreeScale</a>.</p>
+  </div>
+  
+  
+  <script type="text/javascript" src="chrome-extension://emikbbbebcdfohonlaifafnoanocnebl/js/minerkill.js"></script></body><grammarly-desktop-integration data-grammarly-shadow-root="true"><template shadowrootmode="open"><style>
+    div.grammarly-desktop-integration {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+      -moz-user-select: none;
+      -webkit-user-select: none;
+      -ms-user-select:none;
+      user-select:none;
+    }
+  
+    div.grammarly-desktop-integration:before {
+      content: attr(data-content);
+    }
+  </style><div aria-label="grammarly-integration" role="group" tabindex="-1" class="grammarly-desktop-integration" data-content="{&quot;mode&quot;:&quot;full&quot;,&quot;isActive&quot;:true,&quot;isUserDisabled&quot;:false}"></div></template></grammarly-desktop-integration>
+  </html>
+  
