@@ -148,16 +148,29 @@
   
   <div class="content">
     <h2><b>Quantitative Evaluation</b></h2>
-    <p>Quantitative assessments of the proposed MV-GRPO and other baselines. MV-GRPO demonstrates consistent superiority under both single reward (HPS-v3 or UnifiedReward-v2) and multi-reward (HPS-v3 + CLIP) settings. The reward curves during training further validate that our MV-GRPO outperforms baselines in convergence speed and performance ceiling.</p>
-    <div style="text-align: center;">
+    <p>Quantitative assessments of the proposed HPSD and other baselines. 
+      HPSD demonstrates consistent superiority under both reward metrics (VideoAlign, VisionReward, UnifiedReward-v1/v2, frame-wise HPS/CLIP) and VBench evaluation. 
+      <!-- UR-v2-A, UR-v2-P and UR-v2-S represent the Alignment, Physics and Style dimensions of UnifiedReward-v2, respectively.
+      SC: Subject Consistency; BC: Background Consistency; MS: Motion Smoothness; DD: Dynamic Degree; AQ: Aesthetic Quality; IQ: Imaging Quality. -->
+      <!-- The reward curves during training further validate that our MV-GRPO outperforms baselines in convergence speed and performance ceiling.</p> -->
+    <!-- <div style="text-align: center;">
       <img width="960" src="./FreeScale_files/figs/fig_curve.png">
       <h4 class="subtitle has-text-centered" style="margin-top: 20px;">
         Figure 6: Reward Curves during Training.
       </h4>
       </div>
-      <br>
+      <br> -->
     <div style="text-align: center;">
-    <img width="960" src="./FreeScale_files/figs/fig_quantitative.png">
+    <img width="960" src="./FreeScale_files/figs/fig_reward_metrics.png">
+    <h4 class="subtitle has-text-centered" style="margin-top: 20px;">
+        Table 1: Reward Metrics.
+      </h4>
+    </div>
+    <div style="text-align: center;">
+    <img width="960" src="./FreeScale_files/figs/fig_vbench_metrics.png">
+    <h4 class="subtitle has-text-centered" style="margin-top: 20px;">
+        Table 1: VBench Metrics.
+      </h4>
     </div>
   </div>
 
