@@ -335,7 +335,7 @@
       ];
 
       const container = document.getElementById('gallery-pairs');
-      const allVideos = [];
+      const rows = []; // { el, videos: [vanilla, hpsd], active: bool }
 
       pairs.forEach((pair, idx) => {
         const row = document.createElement('div');
@@ -361,69 +361,59 @@
           </div>`;
 
         container.appendChild(row);
-        allVideos.push(document.getElementById(vId), document.getElementById(hId));
+
+        const videos = [document.getElementById(vId), document.getElementById(hId)];
+        rows.push({ el: row, videos: videos, active: false, syncTimer: null, syncLock: false });
       });
 
-      const master = allVideos[0];
-      let syncLock = false;
-      let syncTimer = null;
+      // --- Per-row sync & playback ---
+      function syncRow(r) {
+        const [v, h] = r.videos;
+        if (r.syncLock) return;
+        r.syncLock = true;
+        if (Math.abs(v.currentTime - h.currentTime) > 0.05) {
+          h.currentTime = v.currentTime;
+        }
+        requestAnimationFrame(() => { r.syncLock = false; });
+      }
 
-      function syncAllToMaster() {
-        if (syncLock) return;
-        syncLock = true;
-        const t = master.currentTime;
-        for (let i = 1; i < allVideos.length; i++) {
-          if (Math.abs(allVideos[i].currentTime - t) > 0.05) {
-            allVideos[i].currentTime = t;
+      function playRow(r) {
+        if (r.active) return;
+        r.active = true;
+        const [v, h] = r.videos;
+        v.currentTime = 0;
+        h.currentTime = 0;
+        Promise.all([v.play(), h.play()]).catch(() => {});
+        r.syncTimer = setInterval(() => syncRow(r), 150);
+        // Loop sync
+        v.addEventListener('timeupdate', function loopCb() {
+          if (v.currentTime < 0.1 && h.currentTime > v.duration - 0.5) {
+            h.currentTime = 0;
           }
-        }
-        requestAnimationFrame(() => { syncLock = false; });
+        });
       }
 
-      master.addEventListener('timeupdate', () => {
-        if (master.currentTime < 0.1) {
-          for (let i = 1; i < allVideos.length; i++) {
-            if (allVideos[i].currentTime > master.duration - 0.5) {
-              allVideos[i].currentTime = 0;
-            }
-          }
-        }
-      });
-
-      function startSyncedPlayback() {
-        if (master.paused) {
-          master.currentTime = 0;
-          allVideos.forEach(v => { v.currentTime = 0; });
-          const plays = allVideos.map(v => v.play());
-          Promise.all(plays).catch(() => {
-            document.addEventListener('click', function resume() {
-              allVideos.forEach(v => v.play());
-              document.removeEventListener('click', resume);
-            }, { once: true });
-          });
-        }
-        if (!syncTimer) syncTimer = setInterval(syncAllToMaster, 150);
+      function pauseRow(r) {
+        if (!r.active) return;
+        r.active = false;
+        if (r.syncTimer) { clearInterval(r.syncTimer); r.syncTimer = null; }
+        r.videos.forEach(v => { if (!v.paused) v.pause(); });
       }
 
-      function pauseAll() {
-        if (syncTimer) { clearInterval(syncTimer); syncTimer = null; }
-        allVideos.forEach(v => { if (!v.paused) v.pause(); });
-      }
-
+      // --- Row-level Intersection Observer ---
       const observer = new IntersectionObserver((entries) => {
-        const anyVisible = entries.some(e => e.isIntersecting);
-        if (anyVisible) {
-          startSyncedPlayback();
-        } else {
-          pauseAll();
-        }
-      }, { threshold: 0 });
+        entries.forEach(e => {
+          const rowData = rows.find(r => r.el === e.target);
+          if (!rowData) return;
+          if (e.isIntersecting) {
+            playRow(rowData);
+          } else {
+            pauseRow(rowData);
+          }
+        });
+      }, { rootMargin: '200px' });
 
-      observer.observe(container);
-
-      setTimeout(() => {
-        if (master.paused) startSyncedPlayback();
-      }, 2000);
+      rows.forEach(r => observer.observe(r.el));
     })();
     </script>
   </div>
