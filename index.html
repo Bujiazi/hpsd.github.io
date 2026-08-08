@@ -80,7 +80,8 @@
     <h2 style="text-align:center;"><b>Abstract</b></h2>
     <p>
       Text-Image-to-Video (TI2V) models are an emerging unified architecture, where a single model simultaneously supports text-to-video (T2V) and image-to-video (I2V) generation.
-      Given a high-quality first frame or a detailed textual prompt, TI2V models unlock substantially better visual quality than their T2V mode, raising a natural question: \textit{can the capability elicited by such privileged conditions be internalized into the model's own base generation ability?}
+      Given a high-quality first frame or a detailed textual prompt, TI2V models unlock substantially better visual quality than their T2V mode, raising a natural question: 
+      <i>can the capability elicited by such privileged conditions be internalized into the model's own base generation ability?</i>
       A common approach toward this goal is model self-distillation.
       However, the most straightforward solution, supervised fine-tuning, follows an off-policy strategy: its supervision is confined to teacher-generated endpoints from a fixed offline distribution rather than student-visited states, lacking locally precise correction to the evolving policy.
       Recent on-policy distillation methods instead suffer from condition-state mismatch, where supervision is steered toward the given first frame instead of the student's actual content, misleading the correction.
