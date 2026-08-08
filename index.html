@@ -90,12 +90,12 @@
     <script>
     (function() {
       const pairs = [
-        { vanilla: '1_vanilla.mp4', hpsd: '1_hpsd.mp4' },
-        { vanilla: '4_vanilla.mp4', hpsd: '4_hpsd.mp4' },
-        { vanilla: '5_vanilla.mp4', hpsd: '5_hpsd.mp4' },
-        { vanilla: '6_vanilla.mp4', hpsd: '6_hpsd.mp4' },
-        { vanilla: '2_vanilla.mp4', hpsd: '2_hpsd.mp4' },
-        { vanilla: '3_vanilla.mp4', hpsd: '3_hpsd.mp4' }
+        { vanilla: '1_vanilla.mp4', hpsd: '1_hpsd.mp4', prompt: 'xxx' },
+        { vanilla: '4_vanilla.mp4', hpsd: '4_hpsd.mp4', prompt: 'xxx' },
+        { vanilla: '5_vanilla.mp4', hpsd: '5_hpsd.mp4', prompt: 'xxx' },
+        { vanilla: '6_vanilla.mp4', hpsd: '6_hpsd.mp4', prompt: 'xxx' },
+        { vanilla: '2_vanilla.mp4', hpsd: '2_hpsd.mp4', prompt: 'xxx' },
+        { vanilla: '3_vanilla.mp4', hpsd: '3_hpsd.mp4', prompt: 'xxx' }
       ];
 
       const container = document.getElementById('demo-pairs');
@@ -124,8 +124,12 @@
               <source src="./FreeScale_files/vids/demo/${pair.hpsd}" type="video/mp4">
             </video>
           </div>`;
+        const promptEl = document.createElement('p');
+        promptEl.style.cssText = 'font-style:italic;font-size:12px;color:#999;margin-top:6px;text-align:center;max-width:960px;margin-left:auto;margin-right:auto;';
+        promptEl.textContent = pair.prompt;
 
         container.appendChild(row);
+        container.appendChild(promptEl);
         rows.push(row);
         allVideos.push(document.getElementById(vId), document.getElementById(hId));
       });
@@ -312,26 +316,26 @@
     <script>
     (function() {
       const pairs = [
-        { vanilla: '17_vanilla.mp4', hpsd: '17_hpsd.mp4' },
-        { vanilla: '2_vanilla.mp4', hpsd: '2_hpsd.mp4' },
-        { vanilla: '1_vanilla.mp4', hpsd: '1_hpsd.mp4' },
-        { vanilla: '5_vanilla.mp4', hpsd: '5_hpsd.mp4' },
-        { vanilla: '3_vanilla.mp4', hpsd: '3_hpsd.mp4' },
-        { vanilla: '6_vanilla.mp4', hpsd: '6_hpsd.mp4' },
-        { vanilla: '7_vanilla.mp4', hpsd: '7_hpsd.mp4' },
-        { vanilla: '12_vanilla.mp4', hpsd: '12_hpsd.mp4' },
-        { vanilla: '8_vanilla.mp4', hpsd: '8_hpsd.mp4' },
-        { vanilla: '9_vanilla.mp4', hpsd: '9_hpsd.mp4' },
-        { vanilla: '11_vanilla.mp4', hpsd: '11_hpsd.mp4' },
-        { vanilla: '13_vanilla.mp4', hpsd: '13_hpsd.mp4' },
-        { vanilla: '14_vanilla.mp4', hpsd: '14_hpsd.mp4' },
-        { vanilla: '15_vanilla.mp4', hpsd: '15_hpsd.mp4' },
-        { vanilla: '16_vanilla.mp4', hpsd: '16_hpsd.mp4' },
-        { vanilla: '19_vanilla.mp4', hpsd: '19_hpsd.mp4' },
-        { vanilla: '21_vanilla.mp4', hpsd: '21_hpsd.mp4' },
-        { vanilla: '22_vanilla.mp4', hpsd: '22_hpsd.mp4' },
-        { vanilla: '23_vanilla.mp4', hpsd: '23_hpsd.mp4' },
-        { vanilla: '24_vanilla.mp4', hpsd: '24_hpsd.mp4' }
+        { vanilla: '17_vanilla.mp4', hpsd: '17_hpsd.mp4', prompt: 'xxx' },
+        { vanilla: '2_vanilla.mp4', hpsd: '2_hpsd.mp4', prompt: 'xxx' },
+        { vanilla: '1_vanilla.mp4', hpsd: '1_hpsd.mp4', prompt: 'xxx' },
+        { vanilla: '5_vanilla.mp4', hpsd: '5_hpsd.mp4', prompt: 'xxx' },
+        { vanilla: '3_vanilla.mp4', hpsd: '3_hpsd.mp4', prompt: 'xxx' },
+        { vanilla: '6_vanilla.mp4', hpsd: '6_hpsd.mp4', prompt: 'xxx' },
+        { vanilla: '7_vanilla.mp4', hpsd: '7_hpsd.mp4', prompt: 'xxx' },
+        { vanilla: '12_vanilla.mp4', hpsd: '12_hpsd.mp4', prompt: 'xxx' },
+        { vanilla: '8_vanilla.mp4', hpsd: '8_hpsd.mp4', prompt: 'xxx' },
+        { vanilla: '9_vanilla.mp4', hpsd: '9_hpsd.mp4', prompt: 'xxx' },
+        { vanilla: '11_vanilla.mp4', hpsd: '11_hpsd.mp4', prompt: 'xxx' },
+        { vanilla: '13_vanilla.mp4', hpsd: '13_hpsd.mp4', prompt: 'xxx' },
+        { vanilla: '14_vanilla.mp4', hpsd: '14_hpsd.mp4', prompt: 'xxx' },
+        { vanilla: '15_vanilla.mp4', hpsd: '15_hpsd.mp4', prompt: 'xxx' },
+        { vanilla: '16_vanilla.mp4', hpsd: '16_hpsd.mp4', prompt: 'xxx' },
+        { vanilla: '19_vanilla.mp4', hpsd: '19_hpsd.mp4', prompt: 'xxx' },
+        { vanilla: '21_vanilla.mp4', hpsd: '21_hpsd.mp4', prompt: 'xxx' },
+        { vanilla: '22_vanilla.mp4', hpsd: '22_hpsd.mp4', prompt: 'xxx' },
+        { vanilla: '23_vanilla.mp4', hpsd: '23_hpsd.mp4', prompt: 'xxx' },
+        { vanilla: '24_vanilla.mp4', hpsd: '24_hpsd.mp4', prompt: 'xxx' }
       ];
 
       const container = document.getElementById('gallery-pairs');
@@ -359,8 +363,12 @@
               <source src="./FreeScale_files/vids/gallery/${pair.hpsd}" type="video/mp4">
             </video>
           </div>`;
+        const promptEl = document.createElement('p');
+        promptEl.style.cssText = 'font-style:italic;font-size:12px;color:#999;margin-top:6px;text-align:center;max-width:960px;margin-left:auto;margin-right:auto;';
+        promptEl.textContent = pair.prompt;
 
         container.appendChild(row);
+        container.appendChild(promptEl);
 
         const videos = [document.getElementById(vId), document.getElementById(hId)];
         rows.push({ el: row, videos: videos, active: false, syncTimer: null, syncLock: false });
