@@ -99,7 +99,7 @@
     <h2><b>Observation and Motivation</b></h2>
     <p>
       In this work, we observe that: 
-      for a unified Text-Image-to-Video (TI2V) architecture, the TI2V mode conditioned on an additional high-quality first frame yields substantially better visual quality than the base T2V mode driven by a vanilla prompt, and that a detailed, well-crafted prompt alone brings considerable gains as well, as illustrated in Figure 1.
+      for a unified Text-Image-to-Video (TI2V) architecture, the TI2V mode conditioned on an additional high-quality first frame yields substantially better visual quality than the base T2V mode driven by a vanilla prompt, and that a detailed, well-crafted prompt alone brings considerable gains as well, as illustrated in Figure 2.
       Moreover, these two conditions from different modalities are complementary: a carefully designed first frame combined with an enriched prompt further improves the generation quality beyond either alone.
       We refer to such inputs as <i>privileged conditions</i>, and to the underlying capability they awaken as the <i>condition-elicited capability</i> of TI2V models.
       Notably, these quality differences arise from the same model operating under different external conditions, raising a natural question:
@@ -114,7 +114,7 @@
   </div>
 
   <div class="content">
-    <h2><b>Issues Identified</b></h2>
+    <h2><b>Problem Analysis</b></h2>
     <p>
       A common approach toward this goal is model self-distillation.
       Nevertheless, the most straightforward solution, supervised fine-tuning (SFT) on teacher-generated videos, is inherently off-policy: the student is supervised only on teacher terminal outputs from a fixed offline distribution, which drift away from the states it actually visits as training proceeds, precluding locally precise correction to the evolving policy, as shown in Figure 1 (a).
