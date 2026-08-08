@@ -65,7 +65,7 @@
     <br>
     <span style="font-size: 14.9px"><b>(<sup>*</sup> Equal Contribution &nbsp; <sup>§</sup> Project leader &nbsp; <sup>†</sup> Corresponding Author)</b>
     </span></p>
-    <font size="+2">
+    <font size="+1">
       <p style="text-align: center;">
         <a href="https://bujiazi.github.io/hpsd.github.io/" target="_blank"><b>[Paper (Coming Soon)]</b></a> &nbsp;&nbsp;&nbsp;&nbsp;
         <a href="https://bujiazi.github.io/hpsd.github.io/" target="_blank"><b>[Code (Coming Soon)]</b></a>
@@ -113,11 +113,17 @@
 
   <div class="content">
     <h2><b>Methodology</b></h2>
-    <p>Given a group of SDE samples, MV-GRPO first leverages a flexible Condition Enhancer module (a pretrained VLM or LLM) to generate diverse augmented conditions. These augmented descriptors, along with the original condition, form a multi-view condition cluster for dense condition-data reward signals, facilitating comprehensive advantage estimation. We justify optimizing the policy conditioned on an augmented view using trajectories generated under the original condition in the Theoretical Perspective part of our paper.</p>
+    <p>
+      HPSD lets the student start from the teacher's trajectory and finish under its own policy, which proceeds in the following stages:
+      <b>(a) Offline Stage</b>: Before training, the privileged conditions are synthesized for each prompt with off-the-shelf generative models. 
+      <b>(b) Online Stage</b>: During training, the teacher first rolls out its full denoising trajectory under privileged conditions, yielding an off-policy anchor trajectory that carries the condition-elicited generation content;
+      The student then continues denoising from intermediate states of the anchor trajectory with its own velocity field, and is supervised by the teacher on the resulting sub-trajectory.  
+      Since the supervised states are anchored by the teacher's policy yet evolved by the student's, we term this design a <i>hybrid-policy</i>.
+    </p>
     <div style="text-align: center;">
     <img width="960" src="./FreeScale_files/figs/fig_framework.png">
     <h4 class="subtitle has-text-centered" style="margin-top: 20px;">
-      Figure 3: Overview of MV-GRPO.
+      Figure 3: Overview of HPSD.
     </h4>
     </div>
   </div>
