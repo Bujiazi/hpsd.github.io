@@ -80,6 +80,109 @@
   
 
   <div class="content">
+    <h2 style="text-align:center;"><b>Video Demo</b></h2>
+    <p style="text-align:center; color: #666; font-size: 14px;">
+      Vanilla T2V (left) vs. HPSD (right). All videos are synchronized and loop automatically.
+    </p>
+
+    <div id="demo-pairs"></div>
+
+    <script>
+    (function() {
+      const pairs = [
+        { vanilla: '1_vanilla.mp4', hpsd: '1_hpsd.mp4' },
+        { vanilla: '2_vanilla.mp4', hpsd: '2_hpsd.mp4' }
+      ];
+
+      const container = document.getElementById('demo-pairs');
+      const allVideos = [];
+
+      // Build DOM
+      pairs.forEach((pair, idx) => {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;justify-content:center;gap:20px;max-width:960px;margin:20px auto;';
+
+        const vId = `v-${idx}-vanilla`;
+        const hId = `v-${idx}-hpsd`;
+
+        row.innerHTML =
+          `<div style="flex:1;text-align:center;">
+            <p style="font-weight:bold;margin-bottom:8px;color:#555;">Vanilla T2V</p>
+            <video id="${vId}" muted playsinline loop
+                   style="width:100%;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,0.15);">
+              <source src="./FreeScale_files/vids/demo/${pair.vanilla}" type="video/mp4">
+            </video>
+          </div>
+          <div style="flex:1;text-align:center;">
+            <p style="font-weight:bold;margin-bottom:8px;color:#8F00FF;">HPSD (Ours)</p>
+            <video id="${hId}" muted playsinline loop
+                   style="width:100%;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,0.15);">
+              <source src="./FreeScale_files/vids/demo/${pair.hpsd}" type="video/mp4">
+            </video>
+          </div>`;
+
+        container.appendChild(row);
+        allVideos.push(document.getElementById(vId), document.getElementById(hId));
+      });
+
+      // --- Unified sync: first vanilla video is the master clock ---
+      const master = allVideos[0]; // 1_vanilla
+      let syncLock = false;
+
+      function syncAllToMaster() {
+        if (syncLock) return;
+        syncLock = true;
+        const t = master.currentTime;
+        for (let i = 1; i < allVideos.length; i++) {
+          if (Math.abs(allVideos[i].currentTime - t) > 0.05) {
+            allVideos[i].currentTime = t;
+          }
+        }
+        requestAnimationFrame(() => { syncLock = false; });
+      }
+
+      // Detect master loop-around and reset all followers
+      master.addEventListener('timeupdate', () => {
+        if (master.currentTime < 0.1) {
+          for (let i = 1; i < allVideos.length; i++) {
+            if (allVideos[i].currentTime > master.duration - 0.5) {
+              allVideos[i].currentTime = 0;
+            }
+          }
+        }
+      });
+
+      function startAll() {
+        master.currentTime = 0;
+        const plays = allVideos.map(v => { v.currentTime = 0; return v.play(); });
+        Promise.all(plays)
+          .then(() => { setInterval(syncAllToMaster, 150); })
+          .catch(() => {
+            const resume = () => {
+              allVideos.forEach(v => v.play());
+              setInterval(syncAllToMaster, 150);
+              document.removeEventListener('click', resume);
+            };
+            document.addEventListener('click', resume);
+          });
+      }
+
+      let readyCount = 0;
+      allVideos.forEach(v => {
+        v.addEventListener('loadeddata', () => {
+          readyCount++;
+          if (readyCount >= allVideos.length) startAll();
+        });
+      });
+
+      setTimeout(() => {
+        if (master.paused) startAll();
+      }, 2000);
+    })();
+    </script>
+  </div>
+
+  <div class="content">
     <h2 style="text-align:center;"><b>Abstract</b></h2>
     <p>
       Text-Image-to-Video (TI2V) models are an emerging unified architecture, where a single model simultaneously supports text-to-video (T2V) and image-to-video (I2V) generation.
