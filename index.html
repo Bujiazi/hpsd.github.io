@@ -73,6 +73,9 @@
     </font>
     <br>
     <img width="960" src="./FreeScale_files/figs/fig_teaser.png">
+    <h4 class="subtitle has-text-centered" style="margin-top: 20px;">
+      Figure 1: Preview of HPSD.
+    </h4>
   </div>
   
 
@@ -95,18 +98,35 @@
   <div class="content">
     <h2><b>Observation and Motivation</b></h2>
     <p>
-    Existing flow-based GRPO methods typically operate under a ''Single-View'' paradigm: they evaluate the generated group solely against the single initial condition. This reward evaluation protocol can be reinterpreted as <b>a sparse, one-to-many mapping from the condition space \( \mathcal{C} \) to the data space \( \mathcal{X} \),</b> as shown in the Figure.1 (a). Fundamentally, this paradigm models intra-group relationships by ranking samples based on their alignment with a singular condition, ignoring the multifaceted nature of visual semantics. For instance, as illustrated in Figure.2, given a SDE sample describing a cat and a dog within a teacup, it may rank poorly under one condition (''A cat and a dog in a teacup.'') but highly under another similar condition specifying visual attributes like lighting, motion or composition. Consequently, relying solely on the ranking derived from a single prompt is insufficient to gauge the nuanced relationships among samples, resulting in an inherently sparse reward mapping. Consequently, relying solely on the ranking derived from a single prompt is insufficient to gauge the nuanced relationships among samples, resulting in an inherently sparse reward mapping.
-    In contrast, <b>by incorporating the diverse rankings induced by novel prompts, we can effectively densify the condition-data reward signal</b>, as depicted in Figure.1 (b). This strategy serves dual purposes: (i) enabling a more comprehensive exploration of intra-group relationships from multiple perspectives, and (ii) establishing intrinsic contrasts by identifying ranking shifts across different conditions, thereby facilitating preference-aligned generation under various conditions.</p>
+      In this work, we observe that: 
+      for a unified Text-Image-to-Video (TI2V) architecture, the TI2V mode conditioned on an additional high-quality first frame yields substantially better visual quality than the base T2V mode driven by a vanilla prompt, and that a detailed, well-crafted prompt alone brings considerable gains as well, as illustrated in Figure 1.
+      Moreover, these two conditions from different modalities are complementary: a carefully designed first frame combined with an enriched prompt further improves the generation quality beyond either alone.
+      We refer to such inputs as <i>privileged conditions</i>, and to the underlying capability they awaken as the <i>condition-elicited capability</i> of TI2V models.
+      Notably, these quality differences arise from the same model operating under different external conditions, raising a natural question:
+      <b><i>can this condition-elicited capability be internalized into the model’s own base generation ability?</i></b>
+    </p>
     <div style="text-align: center;">
-    <img width="960" src="./FreeScale_files/figs/fig_motivation.png">
-    <h4 class="subtitle has-text-centered" style="margin-top: 20px;">
-      Figure 1: Reward Evaluation in GRPO Training.
-    </h4>
-  </div>
-  <div style="text-align: center;">
     <img width="960" src="./FreeScale_files/figs/fig_observation.png">
     <h4 class="subtitle has-text-centered" style="margin-top: 20px;">
-      Figure 2: Reward Ranking Varies with Conditions.
+      Figure 2: Condition-Elicited Capability.
+    </h4>
+  </div>
+  </div>
+
+  <div class="content">
+    <h2><b>Issues Identified</b></h2>
+    <p>
+      A common approach toward this goal is model self-distillation.
+      Nevertheless, the most straightforward solution, supervised fine-tuning (SFT) on teacher-generated videos, is inherently off-policy: the student is supervised only on teacher terminal outputs from a fixed offline distribution, which drift away from the states it actually visits as training proceeds, precluding locally precise correction to the evolving policy, as shown in Figure 1 (a).
+      Recent on-policy distillation methods query the teacher at student-visited states to provide dense, state-wise supervision along the student’s own roll-outs, effectively mitigating the exposure bias of off-policy training, as depicted in Figure 1 (b).
+      In TI2V models, however, the privileged image condition is imposed as a fixed first frame that remains clean throughout denoising, whereas the student generates every frame by itself. 
+      The teacher is thus queried on mixed states where the prescribed first-frame content coexists with the student’s own evolving content, and its supervision directs the denoising toward the former, conflicting with the latter—a failure we term <b><i>condition-state mismatch</i></b> (Figure 3).
+      These limitations underscore the need for a new policy structure that absorbs the teacher’s privileged prior while retaining precise policy correction.
+    </p>
+    <div style="text-align: center;">
+    <img width="960" src="./FreeScale_files/figs/fig_mismatch.png">
+    <h4 class="subtitle has-text-centered" style="margin-top: 20px;">
+      Figure 1: Condition-State Mismatch.
     </h4>
   </div>
   </div>
@@ -150,16 +170,6 @@
     <h2><b>Quantitative Evaluation</b></h2>
     <p>Quantitative assessments of the proposed HPSD and other baselines. 
       HPSD demonstrates consistent superiority under both reward metrics (VideoAlign, VisionReward, UnifiedReward-v1/v2, frame-wise HPS/CLIP) and VBench evaluation. 
-      <!-- UR-v2-A, UR-v2-P and UR-v2-S represent the Alignment, Physics and Style dimensions of UnifiedReward-v2, respectively.
-      SC: Subject Consistency; BC: Background Consistency; MS: Motion Smoothness; DD: Dynamic Degree; AQ: Aesthetic Quality; IQ: Imaging Quality. -->
-      <!-- The reward curves during training further validate that our MV-GRPO outperforms baselines in convergence speed and performance ceiling.</p> -->
-    <!-- <div style="text-align: center;">
-      <img width="960" src="./FreeScale_files/figs/fig_curve.png">
-      <h4 class="subtitle has-text-centered" style="margin-top: 20px;">
-        Figure 6: Reward Curves during Training.
-      </h4>
-      </div>
-      <br> -->
     <div style="text-align: center;">
     <img width="960" src="./FreeScale_files/figs/fig_reward_metrics.png">
     <h4 class="subtitle has-text-centered" style="margin-top: 20px;">
