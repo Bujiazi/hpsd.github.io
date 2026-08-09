@@ -210,9 +210,9 @@
       A common approach toward this goal is model self-distillation.
       However, the most straightforward solution, supervised fine-tuning, follows an off-policy strategy: its supervision is confined to teacher-generated endpoints from a fixed offline distribution rather than student-visited states, lacking locally precise correction to the evolving policy.
       Recent on-policy distillation methods instead suffer from condition-state mismatch, where supervision is steered toward the given first frame instead of the student's actual content, misleading the correction.
-      To achieve self-distillation that absorbs the teacher's privileged prior while retaining precise policy correction, in this work, we propose <b>H</b>ybrid-<b>P</b>olicy <b>S</b>elf-<b>D</b>istillation (<b>HPSD</b>), a novel self-distillation framework where a single TI2V model acts as both teacher and student under different conditions: the teacher operates in TI2V mode with a high-quality first frame and an enhanced prompt, while the student runs in the base T2V mode with solely the vanilla prompt.
+      To achieve self-distillation that absorbs the teacher's privileged prior while retaining precise policy correction, in this work, we propose <b>H</b>ybrid-<b>P</b>olicy <b>S</b>elf-<b>D</b>istillation (<b>HPSD</b>), a novel self-distillation framework where a single TI2V model acts as both teacher and student under different conditions: the teacher operates in TI2V mode with a high-quality first frame and an enhanced prompt, while the student runs in the base T2V mode with only the vanilla prompt.
       Specifically, the student inherits off-policy teacher trajectory points as anchors, locally refines them toward its own policy, and finally receives velocity-level supervision on these self-generated roll-outs.
-      Extensive experiments demonstrate that HPSD significantly improves T2V performance while also delivering notable TI2V gains, fundamentally strengthening the model's base generation ability.
+      Extensive experiments demonstrate that HPSD significantly improves T2V performance while also delivering notable TI2V gains, effectively strengthening the model's base generation ability.
       Our code will be released at <a href="https://github.com/Bujiazi/HPSD">HPSD Repo</a>.
     </p>
   </div>
