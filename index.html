@@ -208,7 +208,7 @@
       Given a high-quality first frame or a detailed textual prompt, TI2V models unlock substantially better visual quality than their T2V mode, raising a natural question: 
       <i>can the capability elicited by such privileged conditions be internalized into the model's own base generation ability?</i>
       A common approach toward this goal is model self-distillation.
-      However, the most straightforward solution, supervised fine-tuning, follows an off-policy strategy: its supervision is confined to teacher-generated endpoints from a fixed offline distribution rather than student-visited states, lacking locally precise correction to the evolving policy.
+      However, the most straightforward solution, supervised fine-tuning, follows an off-policy strategy: its supervision is confined to teacher-generated endpoints from a fixed offline distribution rather than student-visited states, lacking precise correction tailored to the evolving policy.
       Recent on-policy distillation methods instead suffer from condition-state mismatch, where supervision is steered toward the given first frame instead of the student's actual content, misleading the correction.
       To achieve self-distillation that absorbs the teacher's privileged prior while retaining precise policy correction, in this work, we propose <b>H</b>ybrid-<b>P</b>olicy <b>S</b>elf-<b>D</b>istillation (<b>HPSD</b>), a novel self-distillation framework where a single TI2V model acts as both teacher and student under different conditions: the teacher operates in TI2V mode with a high-quality first frame and an enhanced prompt, while the student runs in the base T2V mode with only the vanilla prompt.
       Specifically, the student inherits off-policy teacher trajectory points as anchors, locally refines them toward its own policy, and finally receives velocity-level supervision on these self-generated roll-outs.
@@ -239,9 +239,9 @@
     <h2><b>Problem Analysis</b></h2>
     <p>
       A common approach toward this goal is model self-distillation.
-      Nevertheless, the most straightforward solution, supervised fine-tuning (SFT) on teacher-generated videos, is inherently off-policy: the student is supervised only on teacher terminal outputs from a fixed offline distribution, which drift away from the states it actually visits as training proceeds, precluding locally precise correction to the evolving policy, as shown in Figure 1 (a).
+      Nevertheless, the most straightforward solution, supervised fine-tuning (SFT) on teacher-generated videos, is inherently off-policy: the student is supervised only on teacher terminal outputs from a fixed offline distribution, which drift away from the states it actually visits as training proceeds, precluding state-aware precise correction to the evolving policy, as shown in Figure 1 (a).
       Recent on-policy distillation methods query the teacher at student-visited states to provide dense, state-wise supervision along the student’s own roll-outs, effectively mitigating the exposure bias of off-policy training, as depicted in Figure 1 (b).
-      In TI2V models, however, the privileged image condition is imposed as a fixed first frame that remains clean throughout denoising, whereas the student generates every frame by itself. 
+      In TI2V models, however, the privileged image condition is imposed as a fixed first frame that remains clean throughout denoising, whereas the student generates every frame without such conditioning. 
       The teacher is thus queried on mixed states where the prescribed first-frame content coexists with the student’s own evolving content, and its supervision directs the denoising toward the former, conflicting with the latter—a failure we term <b><i>condition-state mismatch</i></b> (Figure 3).
       These limitations underscore the need for a new policy structure that absorbs the teacher’s privileged prior while retaining precise policy correction.
     </p>
