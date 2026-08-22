@@ -246,7 +246,7 @@
       ];
 
       const container = document.getElementById('demo-pairs');
-      const allVideos = [];
+      const rows = [];
 
       pairs.forEach((pair, idx) => {
         const row = document.createElement('div');
@@ -276,15 +276,19 @@
 
         container.appendChild(row);
         container.appendChild(promptEl);
-        allVideos.push(document.getElementById(vId), document.getElementById(hId));
+
+        const videos = [document.getElementById(vId), document.getElementById(hId)];
+        rows.push({ el: row, videos: videos });
       });
 
-      // —— 稳健的同步播放控制器（就绪门控 + 独立时钟 + 统一循环）——
-      createSyncedPlayer({
-        videos: allVideos,
-        container: container,
-        observerOptions: { threshold: 0 },
-        autoplayFallback: 2000
+      // —— 逐行独立控制：每一行作为一个独立同步组（与 Gallery 一致）——
+      rows.forEach(r => {
+        createSyncedPlayer({
+          videos: r.videos,
+          container: r.el,
+          observerOptions: { rootMargin: '200px' },
+          autoplayFallback: 2000
+        });
       });
     })();
     </script>
