@@ -23,6 +23,151 @@
           }
       }
   </script>
+
+  <script>
+  /**
+   * 稳健的视频同步播放控制器。
+   *
+   * 解决「某个视频未加载完成时其他视频原地鬼畜」的问题，核心手段：
+   *   1. 就绪门控：仅当 readyState >= HAVE_CURRENT_DATA 时参与播放/同步，
+   *      未就绪的视频等待 canplay/loadedmetadata 事件后再对齐，避免硬写 currentTime。
+   *   2. 独立逻辑时钟：用 performance.now() 推算目标时间，主视频只作为锚点，
+   *      单个视频卡顿不会把错误进度传染给其他视频。
+   *   3. 统一循环：去掉原生 loop，由控制器在“所有就绪视频均到达末尾附近”时一起归零，
+   *      消除 loop 与手动 seek 的冲突（鬼畜主因）。
+   *   4. seek 前校验：仅当目标时间在可 seek 范围内且差异足够大时才写入，避免频繁抖动。
+   *
+   * @param {Object}   opts
+   * @param {HTMLVideoElement[]} opts.videos          需要同步的一组视频
+   * @param {Element}  opts.container                用于可见性检测的元素
+   * @param {Object}   opts.observerOptions          IntersectionObserver 配置
+   * @param {number}   opts.autoplayFallback         启动后若干 ms 内若仍被浏览器拦截则强制重试；0 表示不重试
+   */
+  function createSyncedPlayer(opts) {
+    const videos = opts.videos;
+    const container = opts.container;
+    const observerOptions = opts.observerOptions || { threshold: 0 };
+    const autoplayFallback = opts.autoplayFallback || 0;
+
+    const SYNC_INTERVAL = 150;   // 同步校正周期（ms）
+    const SYNC_EPSILON = 0.05;   // 进度差阈值（s），小于此值不校正
+    const LOOP_EPSILON = 0.3;    // 循环判定阈值（s），距末尾小于此值视为“播完”
+
+    let active = false;          // 是否处于播放状态（由可见性决定）
+    let started = false;         // 是否已真正启动过播放
+    let syncTimer = null;
+    let anchor = null;           // 作为时间锚点的主视频（首个就绪的视频）
+    let anchorTime = 0;          // 锚点上次采样的 currentTime
+    let anchorStamp = 0;         // 锚点采样时刻（performance.now）
+
+    const isReady = v => v.readyState >= 2 && isFinite(v.duration) && v.duration > 0;
+
+    function pickAnchor() {
+      if (anchor && isReady(anchor)) return anchor;
+      anchor = videos.find(isReady) || null;
+      if (anchor) {
+        anchorTime = anchor.currentTime;
+        anchorStamp = performance.now();
+      }
+      return anchor;
+    }
+
+    // 计算当前应处于的逻辑时间：锚点时间 + 自上次采样流逝的墙钟时间
+    function targetTime() {
+      if (!anchor) return null;
+      const elapsed = (performance.now() - anchorStamp) / 1000;
+      return anchorTime + elapsed;
+    }
+
+    function safeSeek(v, t) {
+      if (!isReady(v) || v.paused) return;
+      const dur = v.duration;
+      if (!isFinite(dur) || dur <= 0) return;
+      // 目标超出可 seek 范围则跳过（尚未缓冲到该位置）
+      try {
+        if (v.seekable.length && (t < v.seekable.start(0) || t > v.seekable.end(0))) return;
+      } catch (e) { /* 某些浏览器 seekable 不可用，忽略 */ }
+      if (Math.abs(v.currentTime - t) > SYNC_EPSILON) {
+        v.currentTime = Math.min(t, dur - 0.05);
+      }
+    }
+
+    function syncOnce() {
+      const a = pickAnchor();
+      if (!a) return;
+
+      // 更新锚点采样（以锚点真实进度为准，避免逻辑时钟无限漂移）
+      anchorTime = a.currentTime;
+      anchorStamp = performance.now();
+
+      const t = targetTime();
+      const dur = a.duration;
+
+      // 循环判定：所有就绪视频都已接近末尾 → 一起归零
+      const allEnded = videos.every(v => !isReady(v) || v.currentTime >= dur - LOOP_EPSILON);
+      if (allEnded) {
+        videos.forEach(v => { if (isReady(v)) v.currentTime = 0; });
+        anchorTime = 0;
+        anchorStamp = performance.now();
+        return;
+      }
+
+      videos.forEach(v => { if (v !== a) safeSeek(v, t); });
+    }
+
+    function ensurePlaying() {
+      videos.forEach(v => {
+        if (isReady(v) && v.paused) {
+          v.play().catch(() => {});
+        }
+      });
+    }
+
+    function start() {
+      active = true;
+      pickAnchor();
+      ensurePlaying();
+      if (!started) {
+        started = true;
+        // 任一视频就绪后对齐一次，避免一开始就错位
+        videos.forEach(v => {
+          if (v.readyState >= 2) {
+            syncOnce();
+          } else {
+            const onReady = () => { syncOnce(); };
+            v.addEventListener('canplay', onReady, { once: true });
+            v.addEventListener('loadedmetadata', onReady, { once: true });
+          }
+        });
+      }
+      if (!syncTimer) syncTimer = setInterval(syncOnce, SYNC_INTERVAL);
+    }
+
+    function stop() {
+      active = false;
+      if (syncTimer) { clearInterval(syncTimer); syncTimer = null; }
+      videos.forEach(v => { if (!v.paused) v.pause(); });
+    }
+
+    // 可见性驱动播放
+    const observer = new IntersectionObserver((entries) => {
+      const anyVisible = entries.some(e => e.isIntersecting);
+      if (anyVisible) start();
+      else stop();
+    }, observerOptions);
+    observer.observe(container);
+
+    // 自动播放兜底：被浏览器拦截时，首次交互后恢复
+    if (autoplayFallback > 0) {
+      setTimeout(() => {
+        if (active && videos.some(v => isReady(v) && v.paused)) {
+          const resume = () => { if (active) ensurePlaying(); };
+          document.addEventListener('click', resume, { once: true });
+        }
+      }, autoplayFallback);
+    }
+  }
+  </script>
   </head>
 
   <script>
@@ -102,7 +247,6 @@
 
       const container = document.getElementById('demo-pairs');
       const allVideos = [];
-      const rows = []; // DOM row elements for visibility tracking
 
       pairs.forEach((pair, idx) => {
         const row = document.createElement('div');
@@ -114,14 +258,14 @@
         row.innerHTML =
           `<div style="flex:1;text-align:center;">
             <p style="font-weight:bold;margin-bottom:8px;color:#555;">Vanilla T2V</p>
-            <video id="${vId}" muted playsinline loop preload="metadata"
+            <video id="${vId}" muted playsinline preload="auto"
                    style="width:100%;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,0.15);">
               <source src="./FreeScale_files/vids/demo/${pair.vanilla}" type="video/mp4">
             </video>
           </div>
           <div style="flex:1;text-align:center;">
             <p style="font-weight:bold;margin-bottom:8px;color:#8F00FF;">HPSD (Ours)</p>
-            <video id="${hId}" muted playsinline loop preload="metadata"
+            <video id="${hId}" muted playsinline preload="auto"
                    style="width:100%;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,0.15);">
               <source src="./FreeScale_files/vids/demo/${pair.hpsd}" type="video/mp4">
             </video>
@@ -132,72 +276,16 @@
 
         container.appendChild(row);
         container.appendChild(promptEl);
-        rows.push(row);
         allVideos.push(document.getElementById(vId), document.getElementById(hId));
       });
 
-      const master = allVideos[0];
-      let syncLock = false;
-      let syncTimer = null;
-
-      function syncAllToMaster() {
-        if (syncLock) return;
-        syncLock = true;
-        const t = master.currentTime;
-        for (let i = 1; i < allVideos.length; i++) {
-          if (Math.abs(allVideos[i].currentTime - t) > 0.05) {
-            allVideos[i].currentTime = t;
-          }
-        }
-        requestAnimationFrame(() => { syncLock = false; });
-      }
-
-      master.addEventListener('timeupdate', () => {
-        if (master.currentTime < 0.1) {
-          for (let i = 1; i < allVideos.length; i++) {
-            if (allVideos[i].currentTime > master.duration - 0.5) {
-              allVideos[i].currentTime = 0;
-            }
-          }
-        }
+      // —— 稳健的同步播放控制器（就绪门控 + 独立时钟 + 统一循环）——
+      createSyncedPlayer({
+        videos: allVideos,
+        container: container,
+        observerOptions: { threshold: 0 },
+        autoplayFallback: 2000
       });
-
-      function startSyncedPlayback() {
-        if (master.paused) {
-          master.currentTime = 0;
-          allVideos.forEach(v => { v.currentTime = 0; });
-          const plays = allVideos.map(v => v.play());
-          Promise.all(plays).catch(() => {
-            document.addEventListener('click', function resume() {
-              allVideos.forEach(v => v.play());
-              document.removeEventListener('click', resume);
-            }, { once: true });
-          });
-        }
-        if (!syncTimer) syncTimer = setInterval(syncAllToMaster, 150);
-      }
-
-      function pauseAll() {
-        if (syncTimer) { clearInterval(syncTimer); syncTimer = null; }
-        allVideos.forEach(v => { if (!v.paused) v.pause(); });
-      }
-
-      // Intersection Observer: play when any part of the row is visible
-      const observer = new IntersectionObserver((entries) => {
-        const anyVisible = entries.some(e => e.isIntersecting);
-        if (anyVisible) {
-          startSyncedPlayback();
-        } else {
-          pauseAll();
-        }
-      }, { threshold: 0 });
-
-      observer.observe(container);
-
-      // Preload fallback
-      setTimeout(() => {
-        if (master.paused) startSyncedPlayback();
-      }, 2000);
     })();
     </script>
   </div>
@@ -341,7 +429,7 @@
       ];
 
       const container = document.getElementById('gallery-pairs');
-      const rows = []; // { el, videos: [vanilla, hpsd], active: bool }
+      const rows = [];
 
       pairs.forEach((pair, idx) => {
         const row = document.createElement('div');
@@ -353,14 +441,14 @@
         row.innerHTML =
           `<div style="flex:1;text-align:center;">
             <p style="font-weight:bold;margin-bottom:8px;color:#555;">Vanilla T2V</p>
-            <video id="${vId}" muted playsinline loop preload="metadata"
+            <video id="${vId}" muted playsinline preload="auto"
                    style="width:100%;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,0.15);">
               <source src="./FreeScale_files/vids/gallery/${pair.vanilla}" type="video/mp4">
             </video>
           </div>
           <div style="flex:1;text-align:center;">
             <p style="font-weight:bold;margin-bottom:8px;color:#8F00FF;">HPSD (Ours)</p>
-            <video id="${hId}" muted playsinline loop preload="metadata"
+            <video id="${hId}" muted playsinline preload="auto"
                    style="width:100%;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,0.15);">
               <source src="./FreeScale_files/vids/gallery/${pair.hpsd}" type="video/mp4">
             </video>
@@ -373,57 +461,18 @@
         container.appendChild(promptEl);
 
         const videos = [document.getElementById(vId), document.getElementById(hId)];
-        rows.push({ el: row, videos: videos, active: false, syncTimer: null, syncLock: false });
+        rows.push({ el: row, videos: videos });
       });
 
-      // --- Per-row sync & playback ---
-      function syncRow(r) {
-        const [v, h] = r.videos;
-        if (r.syncLock) return;
-        r.syncLock = true;
-        if (Math.abs(v.currentTime - h.currentTime) > 0.05) {
-          h.currentTime = v.currentTime;
-        }
-        requestAnimationFrame(() => { r.syncLock = false; });
-      }
-
-      function playRow(r) {
-        if (r.active) return;
-        r.active = true;
-        const [v, h] = r.videos;
-        v.currentTime = 0;
-        h.currentTime = 0;
-        Promise.all([v.play(), h.play()]).catch(() => {});
-        r.syncTimer = setInterval(() => syncRow(r), 150);
-        // Loop sync
-        v.addEventListener('timeupdate', function loopCb() {
-          if (v.currentTime < 0.1 && h.currentTime > v.duration - 0.5) {
-            h.currentTime = 0;
-          }
+      // —— 逐行独立控制：每一行作为一个独立同步组 ——
+      rows.forEach(r => {
+        createSyncedPlayer({
+          videos: r.videos,
+          container: r.el,
+          observerOptions: { rootMargin: '200px' },
+          autoplayFallback: 0
         });
-      }
-
-      function pauseRow(r) {
-        if (!r.active) return;
-        r.active = false;
-        if (r.syncTimer) { clearInterval(r.syncTimer); r.syncTimer = null; }
-        r.videos.forEach(v => { if (!v.paused) v.pause(); });
-      }
-
-      // --- Row-level Intersection Observer ---
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(e => {
-          const rowData = rows.find(r => r.el === e.target);
-          if (!rowData) return;
-          if (e.isIntersecting) {
-            playRow(rowData);
-          } else {
-            pauseRow(rowData);
-          }
-        });
-      }, { rootMargin: '200px' });
-
-      rows.forEach(r => observer.observe(r.el));
+      });
     })();
     </script>
   </div>
